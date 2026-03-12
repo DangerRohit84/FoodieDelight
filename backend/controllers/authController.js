@@ -34,9 +34,9 @@ const sendOtp = async (req, res) => {
         });
         res.status(200).json({ message: 'OTP sent successfully' });
     } catch (error) {
-        console.error('Email send error:', error);
+        console.error('Email send error full details:', error);
         await OTP.deleteMany({ email });
-        res.status(500).json({ message: 'Email could not be sent' });
+        res.status(500).json({ message: 'Email could not be sent', error: error.message });
     }
 };
 
