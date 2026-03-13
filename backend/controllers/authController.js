@@ -118,7 +118,7 @@ const forgotPassword = async (req, res) => {
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
@@ -180,4 +180,31 @@ const resetPassword = async (req, res) => {
     });
 };
 
-module.exports = { registerUser, authUser, forgotPassword, resetPassword, sendOtp };
+const testEmailSetup = async (req, res) => {
+    try {
+        await sendEmail({
+            email: process.env.SMTP_EMAIL || process.env.FROM_EMAIL,
+            subject: 'FoodieDelight Render SMTP Test',
+            message: `If you are reading this, your Render deployment successfully dispatched an email!\n\nDetails:\nService: ${process.env.SMTP_SERVICE}\nEmail: ${process.env.SMTP_EMAIL}`
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Diagnostic email successfully transmitted to the configured SMTP_EMAIL address.',
+            config: {
+                user: process.env.SMTP_EMAIL ? 'Set' : 'Missing',
+                pass: process.env.SMTP_PASSWORD ? 'Set' : 'Missing',
+            }
+        });
+    } catch (error) {
+        console.error('SMTP Diagnostic Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'SMTP connection entirely failed.', 
+            rawError: error.message,
+            stack: error.stack
+        });
+    }
+};
+
+module.exports = { registerUser, authUser, forgotPassword, resetPassword, sendOtp, testEmailSetup };

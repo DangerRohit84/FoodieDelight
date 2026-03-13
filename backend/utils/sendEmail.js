@@ -1,9 +1,15 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // Create reusable transporter object using the default SMTP transport
+    if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+        console.warn('⚠️ WARNING: SMTP_EMAIL or SMTP_PASSWORD is not set in environment variables! Email sending will likely fail in this production environment.');
+    }
+
+    // Create reusable transporter object using explicit SMTP settings for production reliability
     const transporter = nodemailer.createTransport({
-        service: process.env.SMTP_SERVICE || 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.SMTP_EMAIL,
             pass: process.env.SMTP_PASSWORD,
