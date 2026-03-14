@@ -283,6 +283,7 @@ const AdminDashboard = () => {
             'Type': food.foodType || 'Veg',
             'Restaurant': food.restaurantId?.name || 'Admin',
             'Available': food.isAvailable !== false ? 'Yes' : 'No',
+            'Image': food.image || '',
             'Description': food.description || ''
         }));
 
