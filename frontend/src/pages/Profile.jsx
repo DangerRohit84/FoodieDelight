@@ -175,10 +175,10 @@ const Profile = () => {
     };
 
     return (
-        <div style={styles.pageWrapper}>
-            <div style={styles.layout}>
+        <div style={styles.pageWrapper} className="profile-page">
+            <div style={styles.layout} className="profile-layout">
                 {/* Sidebar */}
-                <aside style={styles.sidebar}>
+                <aside style={styles.sidebar} className="profile-sidebar">
                     <div style={styles.userHead}>
                         <div style={styles.avatarLarge}>
                             {user?.name?.charAt(0).toUpperCase()}
@@ -212,7 +212,7 @@ const Profile = () => {
                 </aside>
 
                 {/* Main Content */}
-                <main style={styles.mainContent}>
+                <main style={styles.mainContent} className="profile-main">
                     <AnimatePresence mode="wait">
                         {activeTab === 'profile' ? (
                             <motion.div
@@ -417,6 +417,16 @@ const Profile = () => {
 
             {/* Background Accent */}
             <div style={styles.bgDecoration}></div>
+            <style>{`
+                @media (max-width: 768px) {
+                    .profile-page { padding: 1rem !important; }
+                    .profile-layout { flex-direction: column !important; }
+                    .profile-sidebar { flex: none !important; width: 100% !important; margin-bottom: 1rem !important; }
+                    .profile-main { padding: 1.5rem !important; min-height: auto !important; }
+                    .profile-layout { gap: 1rem !important; }
+                    input, textarea, select { max-width: 100% !important; }
+                }
+            `}</style>
         </div>
     );
 };

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import FoodCard from '../components/FoodCard';
 import { motion } from 'framer-motion';
@@ -10,6 +11,8 @@ const Menu = () => {
     const [activeFoodType, setActiveFoodType] = useState('All');
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchParams] = useSearchParams();
+    const searchQuery = searchParams.get('q') || '';
 
     const shuffleArray = (array) => {
         const shuffled = [...array];
@@ -40,14 +43,29 @@ const Menu = () => {
 
     useEffect(() => {
         let result = foods;
+        
+        // Search Filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.category.toLowerCase().includes(query) ||
+                (item.restaurantId?.name && item.restaurantId.name.toLowerCase().includes(query))
+            );
+        }
+
+        // Category Filter
         if (activeCategory !== 'All') {
             result = result.filter(item => item.category === activeCategory);
         }
+
+        // Food Type Filter
         if (activeFoodType !== 'All') {
             result = result.filter(item => item.foodType === activeFoodType);
         }
+        
         setFilteredFoods(result);
-    }, [foods, activeCategory, activeFoodType]);
+    }, [foods, activeCategory, activeFoodType, searchQuery]);
 
     if (loading) return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -85,8 +103,8 @@ const Menu = () => {
                 </motion.p>
             </div>
 
-            <div style={styles.contentWrapper}>
-                <div style={styles.sidebar}>
+            <div style={styles.contentWrapper} className="menu-content">
+                <div style={styles.sidebar} className="menu-sidebar">
                     <div style={styles.typeFilterContainer}>
                         <button
                             onClick={() => setActiveFoodType('All')}
@@ -122,137 +140,146 @@ const Menu = () => {
                     ))}
                 </div>
             </div>
+            <style>{`
+                @media (max-width: 992px) {
+                    .menu-content {
+                        flex-direction: column !important;
+                    }
+                    .menu-sidebar {
+                        width: 100% !important;
+                        position: static !important;
+                        margin-bottom: 2rem !important;
+                    }
+                }
+                @media (max-width: 768px) {
+                    h1 { font-size: 2.5rem !important; }
+                }
+            `}</style>
         </motion.div>
     );
 };
 
 const styles = {
     container: {
-        padding: '2rem 5%',
+        padding: '1rem 5%',
         maxWidth: '1400px',
         margin: '0 auto',
         minHeight: '80vh',
     },
     hero: {
         textAlign: 'center',
-        padding: '3rem 2rem',
-        marginBottom: '3rem',
+        padding: '2.5rem 1.5rem',
+        marginBottom: '2rem',
         background: 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(10px)',
-        borderRadius: '30px',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.2)',
+        borderRadius: '25px',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
     },
     title: {
-        fontSize: '3.5rem',
+        fontSize: '3rem',
         marginBottom: '0.5rem',
         color: '#222',
         fontWeight: '800',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
         lineHeight: '1.2',
     },
     subtitle: {
         color: '#555',
-        fontSize: '1.2rem',
+        fontSize: '1.1rem',
         maxWidth: '600px',
         margin: '0 auto',
         fontWeight: '500',
     },
     contentWrapper: {
         display: 'flex',
-        gap: '3rem',
+        gap: '2.5rem',
         alignItems: 'flex-start',
+        transition: 'flex-direction 0.3s ease',
     },
     sidebar: {
-        width: '250px',
+        width: '240px',
         flexShrink: 0,
         position: 'sticky',
-        top: '120px',
-        background: 'rgba(255, 255, 255, 0.9)',
-        padding: '1.5rem',
+        top: '110px',
+        background: 'rgba(255, 255, 255, 0.95)',
+        padding: '1.2rem',
         borderRadius: '20px',
         boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
         backdropFilter: 'blur(10px)',
     },
     filterTitle: {
-        fontSize: '1.2rem',
-        marginBottom: '1rem',
+        fontSize: '1.1rem',
+        marginBottom: '0.8rem',
         color: '#333',
         fontWeight: '700',
         borderBottom: '2px solid #ff6b6b',
-        paddingBottom: '0.5rem',
+        paddingBottom: '0.4rem',
         display: 'inline-block',
     },
     categoryList: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.8rem',
+        gap: '0.6rem',
     },
     categoryBtn: {
-        padding: '0.8rem 1.5rem',
+        padding: '0.7rem 1.2rem',
         border: 'none',
         backgroundColor: 'transparent',
-        borderRadius: '12px',
+        borderRadius: '10px',
         cursor: 'pointer',
-        fontSize: '1rem',
+        fontSize: '0.95rem',
         fontWeight: '500',
         color: '#555',
         textAlign: 'left',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        transition: 'all 0.2s ease',
     },
     activeCategoryBtn: {
-        padding: '0.8rem 1.5rem',
+        padding: '0.7rem 1.2rem',
         border: 'none',
         backgroundColor: '#ff6b6b',
-        borderRadius: '12px',
+        borderRadius: '10px',
         cursor: 'pointer',
-        fontSize: '1rem',
+        fontSize: '0.95rem',
         fontWeight: '600',
         color: '#fff',
         textAlign: 'left',
-        boxShadow: '0 4px 10px rgba(255, 107, 107, 0.4)',
-        transition: 'all 0.3s ease',
+        boxShadow: '0 4px 10px rgba(255, 107, 107, 0.3)',
     },
     grid: {
         flex: 1,
-        display: 'flex',
-        flexWrap: 'wrap',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: '2rem',
-        justifyContent: 'center',
+        width: '100%',
     },
     typeFilterContainer: {
         display: 'flex',
-        gap: '0.5rem',
-        marginBottom: '2rem',
-        padding: '0.5rem',
-        background: 'rgba(0,0,0,0.03)',
-        borderRadius: '12px',
+        gap: '0.4rem',
+        marginBottom: '1.5rem',
+        padding: '0.4rem',
+        background: 'rgba(0,0,0,0.02)',
+        borderRadius: '10px',
     },
     typeBtn: {
         flex: 1,
-        padding: '0.5rem',
-        border: '1px solid #ddd',
+        padding: '0.4rem',
+        border: '1px solid #eee',
         background: 'white',
         borderRadius: '8px',
         cursor: 'pointer',
         fontWeight: '600',
-        fontSize: '0.9rem',
-        transition: 'all 0.2s',
+        fontSize: '0.85rem',
         color: '#555',
     },
     activeTypeBtn: {
         flex: 1,
-        padding: '0.5rem',
+        padding: '0.4rem',
         border: 'none',
         background: '#333',
         color: 'white',
         borderRadius: '8px',
         cursor: 'pointer',
         fontWeight: '600',
-        fontSize: '0.9rem',
-        transition: 'all 0.2s',
+        fontSize: '0.85rem',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     }
 };
