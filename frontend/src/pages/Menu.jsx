@@ -11,12 +11,22 @@ const Menu = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const shuffleArray = (array) => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
     useEffect(() => {
         const fetchFoods = async () => {
             try {
                 const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/foods`);
-                setFoods(data);
-                const uniqueCategories = ['All', ...new Set(data.map(item => item.category))];
+                const randomizedData = shuffleArray(data);
+                setFoods(randomizedData);
+                const uniqueCategories = ['All', ...new Set(randomizedData.map(item => item.category))];
                 setCategories(uniqueCategories);
                 setLoading(false);
             } catch (error) {
