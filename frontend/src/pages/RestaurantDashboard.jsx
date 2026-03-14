@@ -18,6 +18,7 @@ const RestaurantDashboard = () => {
     const [filterCategory, setFilterCategory] = useState('All');
     const [selectedFoods, setSelectedFoods] = useState([]);
     const [sortOption, setSortOption] = useState('name-asc');
+    const [importFile, setImportFile] = useState(null);
 
     const config = {
         headers: {
@@ -90,6 +91,32 @@ const RestaurantDashboard = () => {
             fetchFoods();
         } catch (error) {
             toast.error(editFoodId ? 'Failed to update food' : 'Failed to add food');
+        }
+    };
+
+    const handleImport = async (e) => {
+        e.preventDefault();
+        if (!importFile) {
+            toast.error('Please select a file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', importFile);
+
+        try {
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/api/foods/import`, formData, {
+                headers: {
+                    ...config.headers,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            toast.success(data.message);
+            setImportFile(null);
+            e.target.reset();
+            fetchFoods();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Import failed');
         }
     };
 
@@ -231,6 +258,28 @@ const RestaurantDashboard = () => {
                                                 )}
                                             </div>
                                         </form>
+                                    </div>
+
+                                    <div style={styles.importSection}>
+                                        <h3 style={{ marginBottom: '1rem', color: '#555' }}>Bulk Food Import</h3>
+                                        <div style={styles.importBox}>
+                                            <form onSubmit={handleImport} style={styles.importForm}>
+                                                <div style={styles.fileInputWrapper}>
+                                                    <input
+                                                        type="file"
+                                                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                                        onChange={(e) => setImportFile(e.target.files[0])}
+                                                        style={styles.fileInput}
+                                                    />
+                                                </div>
+                                                <button type="submit" style={styles.importButton}>Import Foods</button>
+                                            </form>
+                                            <div style={styles.importInstructions}>
+                                                <p>Supported formats: <strong>.csv, .xlsx</strong></p>
+                                                <p>Required columns: <strong>name, category, price</strong></p>
+                                                <p>Optional: <strong>foodType (Veg/Non-Veg), image, description</strong></p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -449,8 +498,15 @@ const styles = {
     buttonGroup: { display: 'flex', gap: '1rem' },
     updateButton: { padding: '1rem', background: '#007bff', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'background 0.3s', flex: 1 },
     cancelButton: { padding: '1rem', background: '#6c757d', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'background 0.3s', flex: 1 },
-    foodsGrid: { display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginBottom: '2rem' },
+    foodsGrid: { display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem', marginBottom: '2rem' },
     foodFormSection: { minWidth: 0 },
+    importSection: { background: '#f8f9fa', padding: '1.5rem', borderRadius: '12px', height: 'fit-content' },
+    importBox: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+    importForm: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+    fileInputWrapper: { border: '2px dashed #ddd', padding: '1.5rem', borderRadius: '8px', textAlign: 'center', background: 'white' },
+    fileInput: { width: '100%', cursor: 'pointer' },
+    importButton: { padding: '0.8rem', background: '#007bff', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+    importInstructions: { fontSize: '0.85rem', color: '#666', background: '#fff9e6', padding: '0.8rem', borderRadius: '8px', border: '1px solid #ffeeba' }
 };
 
 export default RestaurantDashboard;

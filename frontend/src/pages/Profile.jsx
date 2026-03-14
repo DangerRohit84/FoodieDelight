@@ -7,9 +7,11 @@ import {
     FaUser, FaHome, FaBriefcase, FaMapMarkerAlt, FaTrash,
     FaPlus, FaChevronRight, FaSignOutAlt, FaIdCard, FaPhoneAlt, FaEnvelope
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const { user, logout } = useContext(AuthContext);
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('profile'); // 'profile' or 'addresses'
     const [profileData, setProfileData] = useState({
         name: '',
@@ -152,6 +154,7 @@ const Profile = () => {
                 await axios.put(`${import.meta.env.VITE_API_URL}/api/users/deactivate`, {}, config);
                 toast.success('Account deactivated');
                 logout();
+                navigate('/');
             } catch (error) {
                 toast.error('Deactivation failed');
             }
@@ -164,6 +167,7 @@ const Profile = () => {
                 await axios.delete(`${import.meta.env.VITE_API_URL}/api/users/profile`, config);
                 toast.success('Account deleted');
                 logout();
+                navigate('/');
             } catch (error) {
                 toast.error('Deletion failed');
             }
@@ -201,7 +205,7 @@ const Profile = () => {
                             <FaChevronRight style={styles.chevron} />
                         </button>
                         <div style={styles.menuDivider}></div>
-                        <button onClick={logout} style={styles.logoutBtn}>
+                        <button onClick={() => { logout(); navigate('/'); }} style={styles.logoutBtn}>
                             <FaSignOutAlt /> Logout
                         </button>
                     </div>

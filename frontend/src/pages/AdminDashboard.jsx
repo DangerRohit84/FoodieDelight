@@ -268,6 +268,31 @@ const AdminDashboard = () => {
         toast.success('Orders exported successfully');
     };
 
+    const handleExportFoods = () => {
+        const processedFoods = getProcessedFoods();
+        if (processedFoods.length === 0) {
+            toast.warn('No foods to export');
+            return;
+        }
+
+        const exportData = processedFoods.map(food => ({
+            'ID': food._id,
+            'Name': food.name,
+            'Category': food.category,
+            'Price (₹)': food.price,
+            'Type': food.foodType || 'Veg',
+            'Restaurant': food.restaurantId?.name || 'Admin',
+            'Available': food.isAvailable !== false ? 'Yes' : 'No',
+            'Description': food.description || ''
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Foods");
+        XLSX.writeFile(wb, "foods_export.xlsx");
+        toast.success('Foods exported successfully');
+    };
+
     return (
         <div style={styles.pageWrapper}>
             <motion.div
@@ -534,6 +559,12 @@ const AdminDashboard = () => {
                                         </select>
                                     </div>
 
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-3.2rem', pointerEvents: 'none' }}>
+                                        <button onClick={handleExportFoods} style={{ ...styles.exportBtn, pointerEvents: 'auto' }}>
+                                            Export Foods
+                                        </button>
+                                    </div>
+
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: '#f8f9fa', padding: '0.8rem', borderRadius: '8px' }}>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 'bold', color: '#444' }}>
                                             <input
@@ -677,7 +708,7 @@ const styles = {
     foodInfo: { display: 'flex', alignItems: 'center', gap: '1rem' },
     foodThumb: { width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover' },
 
-    exportBtn: { background: '#28a745', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: '0.5rem' },
+    exportBtn: { background: '#28a745', color: 'white', border: 'none', padding: '0.6rem 0.6rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background 0.3s', display: 'flex', alignItems: 'center', gap: '0.5rem' },
     deleteSelectedBtn: { background: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: 'background 0.3s' },
 
     actionButtons: { display: 'flex', gap: '0.5rem' },
