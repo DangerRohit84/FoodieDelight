@@ -99,7 +99,8 @@ const importFoods = async (req, res) => {
             price: Number(item.price || item.Price),
             image: item.image || item.Image || '',
             description: item.description || item.Description || '',
-            foodType: item.foodType || item.FoodType || 'Veg'
+            foodType: item.foodType || item.FoodType || 'Veg',
+            restaurantId: req.user._id
         }));
 
         // Filter out items without required fields
