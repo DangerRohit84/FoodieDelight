@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 
 // Lazy load page components to dramatically improve split points and initial page load speed
+const Home = React.lazy(() => import('./pages/Home'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Cart = React.lazy(() => import('./pages/Cart'));
 const Login = React.lazy(() => import('./pages/Login'));
@@ -33,7 +34,8 @@ function App() {
             </div>
         }>
           <Routes>
-            <Route path="/" element={<Menu />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/menu" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

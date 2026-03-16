@@ -23,9 +23,9 @@ const Navbar = () => {
         const value = e.target.value;
         setSearchQuery(value);
         
-        // Live search: navigate to home page if not already there, and update URL
-        if (location.pathname !== '/') {
-            navigate(`/?q=${encodeURIComponent(value)}`);
+        // Live search: navigate to menu page if not already there, and update URL
+        if (location.pathname !== '/menu') {
+            navigate(`/menu?q=${encodeURIComponent(value)}`);
         } else {
             // Update URL query parameter without a full page reload or scroll reset
             navigate(`?q=${encodeURIComponent(value)}`, { replace: true });
@@ -44,7 +44,7 @@ const Navbar = () => {
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
+            navigate(`/menu?q=${encodeURIComponent(searchQuery.trim())}`);
             closeMenu();
         }
     };
@@ -86,7 +86,7 @@ const Navbar = () => {
                 ...styles.links,
                 ...(isMenuOpen ? styles.mobileLinksActive : styles.mobileLinksHidden)
             }}>
-                <Link to="/" style={styles.link} onClick={closeMenu}>Menu</Link>
+                <Link to="/menu" style={styles.link} onClick={closeMenu}>Menu</Link>
                 <Link to="/partner" style={styles.link} onClick={closeMenu}>Partner With Us</Link>
                 {user ? (
                     <>
