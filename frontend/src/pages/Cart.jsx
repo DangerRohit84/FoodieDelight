@@ -139,7 +139,7 @@ const Cart = () => {
                     <div style={styles.emptyCart}>
                         <FaShoppingBag style={{ fontSize: '4rem', color: '#888', marginBottom: '1rem' }} />
                         <p>Your cart is currently empty.</p>
-                        <button onClick={() => navigate('/')} style={styles.backButton}>
+                        <button onClick={() => navigate('/menu')} style={styles.backButton}>
                             <FaArrowLeft /> Return to Menu
                         </button>
                     </div>
