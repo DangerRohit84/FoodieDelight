@@ -56,6 +56,13 @@ const updateOrderStatus = async (req, res) => {
     if (order) {
         // Option to verify if the the restaurant owns this, but for now admin/restaurant middleware will handle general protection
         order.status = req.body.status;
+
+        // Auto-update COD payment to paid on delivery
+        if (req.body.status === 'Delivered' && order.paymentMethod === 'Cash on Delivery' && !order.isPaid) {
+            order.isPaid = true;
+            order.paidAt = Date.now();
+        }
+
         const updatedOrder = await order.save();
         res.json(updatedOrder);
     } else {
