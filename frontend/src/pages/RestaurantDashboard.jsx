@@ -40,6 +40,13 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import { 
+    FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaFileAlt, 
+    FaInfoCircle, FaCheckCircle, FaTimesCircle, FaClock,
+    FaCreditCard, FaMoneyBillWave, FaMapMarkerAlt, FaFilter,
+    FaBoxOpen, FaMotorcycle, FaUtensils
+} from 'react-icons/fa';
 
 const RestaurantDashboard = () => {
     const { user } = useContext(AuthContext);
@@ -47,7 +54,9 @@ const RestaurantDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
     const [errorOrders, setErrorOrders] = useState('');
-    const [view, setView] = useState('foods'); // 'foods', 'orders'
+    const [view, setView] = useState('foods'); // 'foods', 'orders', 'analytics'
+    const [analyticsData, setAnalyticsData] = useState(null);
+    const [analyticsDuration, setAnalyticsDuration] = useState(7);
     const [newFood, setNewFood] = useState({
         name: '', category: '', price: '', image: '', description: '', foodType: 'Veg'
     });
@@ -69,6 +78,21 @@ const RestaurantDashboard = () => {
             fetchOrders();
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user && user.role === 'restaurant' && view === 'analytics') {
+            fetchAnalytics();
+        }
+    }, [analyticsDuration, view]);
+
+    const fetchAnalytics = async () => {
+        try {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/analytics/restaurant?days=${analyticsDuration}`, config);
+            setAnalyticsData(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchFoods = async () => {
         try {
@@ -255,6 +279,10 @@ const RestaurantDashboard = () => {
                         onClick={() => setView('orders')}
                         style={view === 'orders' ? styles.activeTab : styles.tab}
                     >Customer Orders</button>
+                    <button
+                        onClick={() => setView('analytics')}
+                        style={view === 'analytics' ? styles.activeTab : styles.tab}
+                    >Analytics</button>
                 </div>
 
                 <div style={styles.contentArea}>
@@ -401,6 +429,30 @@ const RestaurantDashboard = () => {
                                     ))}
                                 </div>
                             </motion.div>
+                        ) : view === 'analytics' ? (
+                            <motion.div
+                                key="analytics"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ ...styles.sectionTitle, marginBottom: 0 }}>Store Performance Analytics</h2>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <select 
+                                            value={analyticsDuration} 
+                                            onChange={(e) => setAnalyticsDuration(Number(e.target.value))}
+                                            style={styles.select}
+                                        >
+                                            <option value={7}>Last 7 Days</option>
+                                            <option value={30}>Last 30 Days</option>
+                                            <option value={90}>Last 90 Days</option>
+                                        </select>
+                                        <button onClick={fetchAnalytics} style={styles.tab}>Refresh</button>
+                                    </div>
+                                </div>
+                                <AnalyticsDashboard data={analyticsData} type="restaurant" />
+                            </motion.div>
                         ) : (
                             <motion.div
                                 key="orders"
@@ -413,60 +465,115 @@ const RestaurantDashboard = () => {
                                 </div>
                                 <div style={styles.tableWrapper}>
                                     <table style={styles.table}>
-                                        <thead>
+                                        <thead style={styles.thead}>
                                             <tr>
-                                                <th style={styles.tableHeader}>Order ID</th>
-                                                <th style={styles.tableHeader}>Customer</th>
-                                                <th style={styles.tableHeader}>Items</th>
-                                                <th style={styles.tableHeader}>Total</th>
-                                                <th style={styles.tableHeader}>Date</th>
-                                                <th style={styles.tableHeader}>Status</th>
-                                                <th style={styles.tableHeader}>Action</th>
+                                                <th style={styles.th}>Order ID</th>
+                                                <th style={styles.th}>Customer</th>
+                                                <th style={styles.th}>Items</th>
+                                                <th style={styles.th}>Delivery Address</th>
+                                                <th style={styles.th}>Total</th>
+                                                <th style={styles.th}>Payment</th>
+                                                <th style={styles.th}>Date</th>
+                                                <th style={styles.th}>Status</th>
+                                                <th style={styles.th}>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {loadingOrders ? (
-                                                <tr><td colSpan="7" style={styles.tableCell}>Loading orders...</td></tr>
+                                                <tr><td colSpan="9" style={styles.td}>Loading orders...</td></tr>
                                             ) : errorOrders ? (
-                                                <tr><td colSpan="7" style={styles.tableCell}>{errorOrders}</td></tr>
+                                                <tr><td colSpan="9" style={styles.td}>{errorOrders}</td></tr>
                                             ) : orders.length === 0 ? (
-                                                <tr><td colSpan="7" style={styles.tableCell}>No orders found.</td></tr>
+                                                <tr><td colSpan="9" style={styles.td}>No orders found.</td></tr>
                                             ) : (
                                                 orders.map((order) => (
-                                                    <tr key={order._id}>
-                                                        <td style={styles.tableCell}>{order._id.substring(0, 8)}...</td>
-                                                        <td style={styles.tableCell}>
-                                                            {order.user?.name || 'Unknown'}<br />
+                                                    <tr key={order._id} style={styles.tr}>
+                                                        <td style={styles.td}>
+                                                            <span style={styles.idBadge}>#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                                                        </td>
+                                                        <td style={styles.td}>
+                                                            <div style={{ fontWeight: '600', color: '#1a1a1a' }}>{order.user?.name || 'Unknown'}</div>
                                                             {order.shippingAddress && (
-                                                                <span style={{ fontSize: '0.85rem', color: '#666' }}>
-                                                                    {order.shippingAddress.phone}
-                                                                </span>
+                                                                <div style={styles.contactItem}>
+                                                                    <FaPhone size={10} /> {order.shippingAddress.phone}
+                                                                </div>
                                                             )}
                                                         </td>
-                                                        <td style={styles.tableCell}>
-                                                            <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                                                        <td style={styles.td}>
+                                                            <div style={styles.itemList}>
                                                                 {order.orderItems.map((item, idx) => (
-                                                                    <li key={idx} style={{ fontSize: '0.9rem' }}>
-                                                                        {item.qty}x {item.name}
-                                                                    </li>
+                                                                    <div key={idx} style={styles.itemRow}>
+                                                                        <span style={styles.itemQty}>{item.qty}x</span> {item.name}
+                                                                    </div>
                                                                 ))}
-                                                            </ul>
+                                                            </div>
                                                         </td>
-                                                        <td style={styles.tableCell}>₹{order.totalPrice.toFixed(2)}</td>
-                                                        <td style={styles.tableCell}>{new Date(order.createdAt).toLocaleDateString()}</td>
-                                                        <td style={styles.tableCell}>
+                                                        <td style={styles.td}>
+                                                            {order.shippingAddress ? (
+                                                                <div style={styles.addressBox}>
+                                                                    <FaMapMarkerAlt size={12} style={{ marginTop: '2px' }} />
+                                                                    <span>{order.shippingAddress.address}, {order.shippingAddress.city}</span>
+                                                                </div>
+                                                            ) : <span style={{ color: '#999' }}>N/A</span>}
+                                                        </td>
+                                                        <td style={styles.td}>
+                                                            <div style={{ fontWeight: '700', color: '#1a1a1a' }}>₹{order.totalPrice.toFixed(2)}</div>
+                                                        </td>
+                                                        <td style={styles.td}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                                                <div style={{ 
+                                                                    padding: '0.4rem', 
+                                                                    borderRadius: '8px', 
+                                                                    background: order.paymentMethod === 'Cash on Delivery' ? '#e8f5e9' : '#e3f2fd',
+                                                                    color: order.paymentMethod === 'Cash on Delivery' ? '#2e7d32' : '#1565c0'
+                                                                }}>
+                                                                    {order.paymentMethod === 'Cash on Delivery' ? <FaMoneyBillWave size={14} /> : <FaCreditCard size={14} />}
+                                                                </div>
+                                                                <div style={{ fontSize: '0.85rem' }}>
+                                                                    <div style={{ fontWeight: '600' }}>{order.paymentMethod}</div>
+                                                                    <span style={{ 
+                                                                        fontSize: '0.75rem', 
+                                                                        color: order.isPaid ? '#2e7d32' : '#c62828',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '0.2rem'
+                                                                    }}>
+                                                                        {order.isPaid ? <FaCheckCircle size={10} /> : <FaClock size={10} />}
+                                                                        {order.isPaid ? 'Paid' : 'Unpaid'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={styles.td}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#666', fontSize: '0.85rem' }}>
+                                                                <FaCalendarAlt size={12} />
+                                                                {new Date(order.createdAt).toLocaleDateString()}
+                                                            </div>
+                                                        </td>
+                                                        <td style={styles.td}>
                                                             <span style={{
-                                                                ...styles.badge,
-                                                                backgroundColor: order.status === 'Delivered' ? '#28a745' : order.status === 'Cancelled' ? '#dc3545' : '#ffc107'
+                                                                ...styles.pill,
+                                                                backgroundColor: 
+                                                                    order.status === 'Delivered' ? '#e8f5e9' : 
+                                                                    order.status === 'Cancelled' || order.status === 'Rejected' ? '#ffebee' : 
+                                                                    '#fff8e1',
+                                                                color: 
+                                                                    order.status === 'Delivered' ? '#2e7d32' : 
+                                                                    order.status === 'Cancelled' || order.status === 'Rejected' ? '#c62828' : 
+                                                                    '#f9a825'
                                                             }}>
+                                                                {order.status === 'Delivered' && <FaCheckCircle size={12} />}
+                                                                {order.status === 'Preparing' && <FaUtensils size={12} />}
+                                                                {order.status === 'Out for Delivery' && <FaMotorcycle size={12} />}
+                                                                {order.status === 'Processing' && <FaBoxOpen size={12} />}
                                                                 {order.status}
                                                             </span>
                                                         </td>
-                                                        <td style={styles.tableCell}>
+                                                        <td style={styles.td}>
                                                             <select
                                                                 value={order.status}
                                                                 onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                                                                style={styles.select}
+                                                                style={{...styles.select, padding: '0.3rem'}}
                                                             >
                                                                 <option value="Processing">Processing</option>
                                                                 <option value="Preparing">Preparing</option>
@@ -510,11 +617,80 @@ const styles = {
     sectionTitle: { marginBottom: '1.2rem', color: '#444', fontSize: '1.4rem' },
     tabs: { display: 'flex', gap: '0.5rem', marginBottom: '2rem', borderBottom: '2px solid #eee', paddingBottom: '0.5rem', flexWrap: 'wrap' },
     tab: { background: 'none', border: 'none', fontSize: '1rem', fontWeight: 'bold', color: '#666', cursor: 'pointer', padding: '0.5rem 1rem', transition: 'color 0.3s' },
-    activeTab: { background: 'none', border: 'none', fontSize: '1rem', fontWeight: 'bold', color: '#ff6b6b', cursor: 'pointer', padding: '0.5rem 1rem', borderBottom: '3px solid #ff6b6b' },
+    activeTab: { background: 'none', border: 'none', fontSize: '1rem', fontWeight: 'bold', color: '#ff6b6b', cursor: 'pointer', padding: '0.5rem 1rem' },
     tableWrapper: { overflowX: 'auto', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', border: '1px solid #eee', marginBottom: '1rem' },
     table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' },
     tableHeader: { padding: '1rem', borderBottom: '2px solid #eee', color: '#555', backgroundColor: '#f9f9f9', fontSize: '0.9rem', fontWeight: '700' },
     tableCell: { padding: '1rem', borderBottom: '1px solid #eee', verticalAlign: 'middle', fontSize: '0.9rem' },
+    thead: { background: '#f8f9fa' },
+    th: {
+        padding: '1.2rem 1rem',
+        textAlign: 'left',
+        fontSize: '0.85rem',
+        fontWeight: '700',
+        color: '#888',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        borderBottom: '2px solid #f1f3f5'
+    },
+    tr: {
+        transition: 'background 0.2s',
+        '&:hover': { background: '#fafafa' }
+    },
+    td: {
+        padding: '1.2rem 1rem',
+        borderBottom: '1px solid #f1f3f5',
+        verticalAlign: 'middle'
+    },
+    idBadge: {
+        background: '#f1f3f5',
+        color: '#495057',
+        padding: '0.2rem 0.5rem',
+        borderRadius: '6px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        fontFamily: 'monospace'
+    },
+    pill: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        padding: '0.4rem 0.8rem',
+        borderRadius: '50px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
+    },
+    contactItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        fontSize: '0.8rem',
+        color: '#666',
+        marginTop: '0.2rem'
+    },
+    itemList: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.2rem'
+    },
+    itemRow: {
+        fontSize: '0.85rem',
+        color: '#444'
+    },
+    itemQty: {
+        fontWeight: 'bold',
+        color: '#ff6b6b'
+    },
+    addressBox: {
+        display: 'flex',
+        gap: '0.5rem',
+        fontSize: '0.85rem',
+        color: '#666',
+        maxWidth: '200px',
+        lineHeight: '1.4'
+    },
     badge: { padding: '0.3rem 0.6rem', borderRadius: '50px', color: 'white', fontSize: '0.75rem', fontWeight: 'bold', display: 'inline-block' },
     select: { padding: '0.5rem', borderRadius: '8px', border: '1px solid #ddd', cursor: 'pointer', fontSize: '0.9rem' },
     form: { display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', background: '#f8f9fa', padding: '1.5rem', borderRadius: '12px' },

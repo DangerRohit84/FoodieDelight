@@ -36,6 +36,7 @@ const FoodCard = memo(({ food }) => {
             <div style={styles.imageContainer}>
                 <img src={food.image} alt={food.name} style={{ ...styles.image, filter: food.isAvailable === false ? 'grayscale(100%) opacity(0.7)' : 'none' }} loading="lazy" />
                 <div style={styles.overlay}></div>
+                
                 <div style={styles.typeIndicator(food.foodType)}>
                     <div style={styles.typeDot(food.foodType)}></div>
                 </div>
@@ -100,6 +101,7 @@ const styles = {
         width: '100%',
         height: '100%',
         background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.6))',
+        zIndex: 1,
     },
     addButton: {
         position: 'absolute',

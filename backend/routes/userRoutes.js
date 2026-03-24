@@ -7,7 +7,8 @@ const {
     deleteAddress,
     deleteUser,
     deactivateUser,
-    updateAddress
+    updateAddress,
+    toggleFavorite
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 

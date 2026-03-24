@@ -27,7 +27,9 @@ const Menu = () => {
         const fetchFoods = async () => {
             try {
                 const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/foods`);
-                const randomizedData = shuffleArray(data);
+                // Only shuffle and set foods that have a name, price, and image
+                const validFoods = data.filter(item => item.name && item.price && item.image);
+                const randomizedData = shuffleArray(validFoods);
                 setFoods(randomizedData);
                 const uniqueCategories = ['All', ...new Set(randomizedData.map(item => item.category))];
                 setCategories(uniqueCategories);

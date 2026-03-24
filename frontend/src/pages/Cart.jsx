@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTrash, FaShoppingBag, FaArrowLeft, FaHome, FaBriefcase } from 'react-icons/fa';
+import PaymentModal from '../components/PaymentModal';
 
 const Cart = () => {
     const { cartItems, removeFromCart, clearCart } = useContext(CartContext);
@@ -23,6 +24,9 @@ const Cart = () => {
         country: '',
         phone: ''
     });
+
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [pendingOrders, setPendingOrders] = useState([]);
 
     const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
@@ -121,13 +125,44 @@ const Cart = () => {
                 return axios.post(`${import.meta.env.VITE_API_URL}/api/orders`, orderPayload, config);
             });
 
-            await Promise.all(orderPromises);
+            const responses = await Promise.all(orderPromises);
+            const createdOrders = responses.map(res => res.data);
+            
+            setPendingOrders(createdOrders);
+            setShowPaymentModal(true);
+            
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Order failed');
+        }
+    };
 
-            toast.success('Order(s) placed successfully! 🍕');
+    const handlePaymentSuccess = async (paymentResult) => {
+        try {
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${user.token}`,
+                },
+            };
+
+            // Update each pending order based on payment method
+            const payPromises = pendingOrders.map(order => {
+                if (paymentResult.isCOD) {
+                    return axios.put(`${import.meta.env.VITE_API_URL}/api/orders/${order._id}/cod`, {}, config);
+                } else {
+                    return axios.put(`${import.meta.env.VITE_API_URL}/api/orders/${order._id}/pay`, paymentResult, config);
+                }
+            });
+
+            await Promise.all(payPromises);
+
+            setShowPaymentModal(false);
+            toast.success(paymentResult.isCOD ? 'Order placed successfully! (COD) 🍕' : 'Payment successful! Order(s) placed 🍕');
             clearCart();
             navigate('/myorders');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Order failed');
+            toast.error('Payment verification failed');
+            console.error(error);
         }
     };
 
@@ -139,7 +174,7 @@ const Cart = () => {
                     <div style={styles.emptyCart}>
                         <FaShoppingBag style={{ fontSize: '4rem', color: '#888', marginBottom: '1rem' }} />
                         <p>Your cart is currently empty.</p>
-                        <button onClick={() => navigate('/')} style={styles.backButton}>
+                        <button onClick={() => navigate('/menu')} style={styles.backButton}>
                             <FaArrowLeft /> Return to Menu
                         </button>
                     </div>
@@ -346,6 +381,30 @@ const Cart = () => {
                     </div>
                 </div>
             </motion.div>
+
+            <PaymentModal 
+                isOpen={showPaymentModal}
+                onClose={async () => {
+                    setShowPaymentModal(false);
+                    try {
+                        const config = {
+                            headers: { Authorization: `Bearer ${user.token}` },
+                        };
+                        // Mark each pending order as failed
+                        const failPromises = pendingOrders.map(order => 
+                            axios.put(`${import.meta.env.VITE_API_URL}/api/orders/${order._id}/fail`, {}, config)
+                        );
+                        await Promise.all(failPromises);
+                        toast.error('Payment cancelled. Order(s) marked as failed.');
+                    } catch (error) {
+                        console.error('Failed to mark orders as failed:', error);
+                    }
+                    clearCart();
+                    navigate('/myorders');
+                }}
+                onPaymentSuccess={handlePaymentSuccess}
+                totalAmount={totalPrice}
+            />
         </div>
     );
 };

@@ -4,13 +4,22 @@ import AuthContext from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import { 
+    FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaFileAlt, 
+    FaInfoCircle, FaCheckCircle, FaTimesCircle, FaClock,
+    FaArrowRight, FaFilter, FaFileExport, FaDownload,
+    FaCreditCard, FaMoneyBillWave, FaExclamationCircle
+} from 'react-icons/fa';
 
 const AdminDashboard = () => {
     const { user } = useContext(AuthContext);
     const [orders, setOrders] = useState([]);
     const [foods, setFoods] = useState([]);
     const [applications, setApplications] = useState([]);
-    const [view, setView] = useState('orders'); // 'orders', 'foods', 'applications'
+    const [view, setView] = useState('orders'); // 'orders', 'foods', 'applications', 'analytics'
+    const [analyticsData, setAnalyticsData] = useState(null);
+    const [analyticsDuration, setAnalyticsDuration] = useState(7);
     const [newFood, setNewFood] = useState({
         name: '', category: '', price: '', image: '', description: '', foodType: 'Veg'
     });
@@ -39,6 +48,21 @@ const AdminDashboard = () => {
             fetchApplications();
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user && user.role === 'admin' && view === 'analytics') {
+            fetchAnalytics();
+        }
+    }, [analyticsDuration, view]);
+
+    const fetchAnalytics = async () => {
+        try {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/analytics/admin?days=${analyticsDuration}`, config);
+            setAnalyticsData(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const fetchOrders = async () => {
         try {
@@ -315,6 +339,10 @@ const AdminDashboard = () => {
                         onClick={() => setView('applications')}
                         style={view === 'applications' ? styles.activeTab : styles.tab}
                     >Partner Apps</button>
+                    <button
+                        onClick={() => setView('analytics')}
+                        style={view === 'analytics' ? styles.activeTab : styles.tab}
+                    >Analytics</button>
                 </div>
 
                 <div style={styles.contentArea}>
@@ -331,47 +359,68 @@ const AdminDashboard = () => {
                                 </div>
                                 <div style={styles.tableWrapper}>
                                     <table style={styles.table}>
-                                        <thead>
+                                        <thead style={styles.thead}>
                                             <tr>
-                                                <th>Restaurant Name</th>
-                                                <th>Owner Name</th>
-                                                <th>Contact</th>
-                                                <th>Date Applied</th>
-                                                <th>Document</th>
-                                                <th>Status</th>
-                                                <th>Action</th>
+                                                <th style={styles.th}>Restaurant</th>
+                                                <th style={styles.th}>Owner</th>
+                                                <th style={styles.th}>Contact</th>
+                                                <th style={styles.th}>Applied On</th>
+                                                <th style={styles.th}>Document</th>
+                                                <th style={styles.th}>Status</th>
+                                                <th style={styles.th}>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {applications.map((app) => (
-                                                <tr key={app._id}>
-                                                    <td>{app.restaurantName}</td>
-                                                    <td>{app.ownerName}</td>
-                                                    <td>{app.email}<br /><span style={{ fontSize: '0.85rem', color: '#666' }}>{app.phone}</span></td>
-                                                    <td>{new Date(app.createdAt).toLocaleDateString()}</td>
-                                                    <td>
+                                                <tr key={app._id} style={styles.tr}>
+                                                    <td style={styles.td}>
+                                                        <div style={{ fontWeight: '700', color: '#1a1a1a' }}>{app.restaurantName}</div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                                            <div style={styles.avatar}>{app.ownerName.charAt(0)}</div>
+                                                            <span>{app.ownerName}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={styles.contactInfo}>
+                                                            <div style={styles.contactItem}><FaEnvelope size={12} /> {app.email}</div>
+                                                            <div style={styles.contactItem}><FaPhone size={12} /> {app.phone}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#666' }}>
+                                                            <FaCalendarAlt size={12} />
+                                                            {new Date(app.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td style={styles.td}>
                                                         <a
                                                             href={`https://docs.google.com/viewer?url=${encodeURIComponent(app.documentPath && app.documentPath.startsWith('http') ? app.documentPath : `${import.meta.env.VITE_API_URL}/${app.documentPath}`)}`}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 'bold' }}
+                                                            style={styles.docLink}
                                                         >
-                                                            View Doc
+                                                            <FaFileAlt /> View Doc
                                                         </a>
                                                     </td>
-                                                    <td>
+                                                    <td style={styles.td}>
                                                         <span style={{
-                                                            ...styles.badge,
-                                                            backgroundColor: app.status === 'Approved' ? '#28a745' : app.status === 'Rejected' ? '#dc3545' : '#ffc107'
+                                                            ...styles.pill,
+                                                            backgroundColor: app.status === 'Approved' ? '#e8f5e9' : app.status === 'Rejected' ? '#ffebee' : '#fff8e1',
+                                                            color: app.status === 'Approved' ? '#2e7d32' : app.status === 'Rejected' ? '#c62828' : '#f9a825'
                                                         }}>
+                                                            {app.status === 'Approved' && <FaCheckCircle size={12} />}
+                                                            {app.status === 'Rejected' && <FaTimesCircle size={12} />}
+                                                            {app.status === 'Pending' && <FaClock size={12} />}
                                                             {app.status}
                                                         </span>
                                                     </td>
-                                                    <td>
+                                                    <td style={styles.td}>
                                                         <select
                                                             value={app.status}
                                                             onChange={(e) => handleApplicationStatusChange(app._id, e.target.value)}
-                                                            style={styles.select}
+                                                            style={{...styles.select, padding: '0.4rem'}}
                                                         >
                                                             <option value="Pending">Pending</option>
                                                             <option value="Approved">Approved</option>
@@ -391,74 +440,150 @@ const AdminDashboard = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ ...styles.sectionTitle, marginBottom: 0 }}>Manage Orders</h2>
-                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                        <label style={{ fontWeight: '600', color: '#555' }}>Filter Status:</label>
-                                        <select
-                                            value={filterOrderStatus}
-                                            onChange={(e) => setFilterOrderStatus(e.target.value)}
-                                            style={styles.select}
-                                        >
-                                            <option value="All">All Orders</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Preparing">Preparing</option>
-                                            <option value="Delivered">Delivered</option>
-                                        </select>
-                                        <button onClick={handleExportOrders} style={styles.exportBtn}>
-                                            Export Data
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ ...styles.sectionTitle, marginBottom: 0 }}>Active Orders Overview</h2>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <div style={styles.filterGroup}>
+                                            <FaFilter size={14} color="#666" />
+                                            <select
+                                                value={filterOrderStatus}
+                                                onChange={(e) => setFilterOrderStatus(e.target.value)}
+                                                style={styles.ghostSelect}
+                                            >
+                                                <option value="All">All Orders</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="Preparing">Preparing</option>
+                                                <option value="Delivered">Delivered</option>
+                                            </select>
+                                        </div>
+                                        <button onClick={handleExportOrders} style={styles.premiumBtn}>
+                                            <FaFileExport /> Export Orders
                                         </button>
                                     </div>
                                 </div>
                                 <div style={styles.tableWrapper}>
                                     <table style={styles.table}>
-                                        <thead>
+                                        <thead style={styles.thead}>
                                             <tr>
-                                                <th>ID</th>
-                                                <th>Date</th>
-                                                <th>User</th>
-                                                <th>Total</th>
-                                                <th>Status</th>
-                                                <th>Shipping</th>
-                                                <th>Action</th>
+                                                <th style={styles.th}>ID</th>
+                                                <th style={styles.th}>Date</th>
+                                                <th style={styles.th}>Customer</th>
+                                                <th style={styles.th}>Total</th>
+                                                <th style={styles.th}>Payment</th>
+                                                <th style={styles.th}>Status</th>
+                                                <th style={styles.th}>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {orders.filter(order => filterOrderStatus === 'All' || order.status === filterOrderStatus).map((order) => (
-                                                <tr key={order._id}>
-                                                    <td>{order._id.substring(0, 8)}...</td>
-                                                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                                                    <td>{order.user?.name}</td>
-                                                    <td>₹{order.totalPrice.toFixed(2)}</td>
-                                                    <td>
-                                                        <span style={{ ...styles.badge, backgroundColor: order.status === 'Delivered' ? '#28a745' : '#ffc107' }}>
+                                                <tr key={order._id} style={styles.tr}>
+                                                    <td style={styles.td}>
+                                                        <span style={styles.idBadge}>#{order._id.substring(order._id.length - 6).toUpperCase()}</span>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#666' }}>
+                                                            <FaCalendarAlt size={12} />
+                                                            {new Date(order.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ fontWeight: '600' }}>{order.user?.name || 'Guest'}</div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ fontWeight: '700', color: '#1a1a1a', fontSize: '1rem' }}>₹{order.totalPrice.toFixed(2)}</div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                                            <div style={{ 
+                                                                padding: '0.4rem', 
+                                                                borderRadius: '8px', 
+                                                                background: order.paymentMethod === 'Cash on Delivery' ? '#e8f5e9' : '#e3f2fd',
+                                                                color: order.paymentMethod === 'Cash on Delivery' ? '#2e7d32' : '#1565c0'
+                                                            }}>
+                                                                {order.paymentMethod === 'Cash on Delivery' ? <FaMoneyBillWave size={14} /> : <FaCreditCard size={14} />}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.85rem' }}>
+                                                                <div style={{ fontWeight: '600' }}>{order.paymentMethod}</div>
+                                                                <span style={{ 
+                                                                    fontSize: '0.75rem', 
+                                                                    color: order.isPaid ? '#2e7d32' : '#c62828',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.2rem'
+                                                                }}>
+                                                                    {order.isPaid ? <FaCheckCircle size={10} /> : <FaClock size={10} />}
+                                                                    {order.isPaid ? 'Paid' : 'Unpaid'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={styles.td}>
+                                                        <span style={{ 
+                                                            ...styles.pill, 
+                                                            backgroundColor: 
+                                                                order.status === 'Delivered' ? '#e8f5e9' : 
+                                                                order.status === 'Failed' || order.status === 'Cancelled' ? '#ffebee' : 
+                                                                '#fff8e1',
+                                                            color: 
+                                                                order.status === 'Delivered' ? '#2e7d32' : 
+                                                                order.status === 'Failed' || order.status === 'Cancelled' ? '#c62828' : 
+                                                                '#f9a825'
+                                                        }}>
+                                                            {order.status === 'Delivered' && <FaCheckCircle size={12} />}
+                                                            {(order.status === 'Failed' || order.status === 'Cancelled') && <FaTimesCircle size={12} />}
+                                                            {['Pending', 'Preparing', 'Processing'].includes(order.status) && <FaClock size={12} />}
                                                             {order.status}
                                                         </span>
                                                     </td>
-                                                    <td>
-                                                        <button
-                                                            onClick={() => alert(`Address: ${order.shippingAddress?.address}, ${order.shippingAddress?.city}\nPhone: ${order.shippingAddress?.phone}`)}
-                                                            style={styles.viewBtn}
-                                                        >
-                                                            View Info
-                                                        </button>
-                                                    </td>
-                                                    <td>
-                                                        <select
-                                                            value={order.status}
-                                                            onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                                                            style={styles.select}
-                                                        >
-                                                            <option value="Pending">Pending</option>
-                                                            <option value="Preparing">Preparing</option>
-                                                            <option value="Delivered">Delivered</option>
-                                                        </select>
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                            <button
+                                                                onClick={() => alert(`Address: ${order.shippingAddress?.address}, ${order.shippingAddress?.city}\nPhone: ${order.shippingAddress?.phone}`)}
+                                                                style={styles.iconBtn}
+                                                                title="Order Info"
+                                                            >
+                                                                <FaInfoCircle />
+                                                            </button>
+                                                            <select
+                                                                value={order.status}
+                                                                onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
+                                                                style={{...styles.select, padding: '0.3rem'}}
+                                                            >
+                                                                <option value="Pending">Pending</option>
+                                                                <option value="Preparing">Preparing</option>
+                                                                <option value="Delivered">Delivered</option>
+                                                            </select>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
+                            </motion.div>
+                        ) : view === 'analytics' ? (
+                            <motion.div
+                                key="analytics"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ ...styles.sectionTitle, marginBottom: 0 }}>Global Sales Analytics</h2>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <select 
+                                            value={analyticsDuration} 
+                                            onChange={(e) => setAnalyticsDuration(Number(e.target.value))}
+                                            style={styles.select}
+                                        >
+                                            <option value={7}>Last 7 Days</option>
+                                            <option value={30}>Last 30 Days</option>
+                                            <option value={90}>Last 90 Days</option>
+                                        </select>
+                                        <button onClick={fetchAnalytics} style={styles.viewBtn}>Refresh</button>
+                                    </div>
+                                </div>
+                                <AnalyticsDashboard data={analyticsData} type="admin" />
                             </motion.div>
                         ) : (
                             <motion.div
@@ -698,6 +823,130 @@ const styles = {
     tableWrapper: { overflowX: 'auto', marginBottom: '1rem', borderRadius: '8px', border: '1px solid #eee' },
     table: { width: '100%', borderCollapse: 'collapse', minWidth: '800px' },
     badge: { padding: '0.3rem 0.6rem', borderRadius: '12px', color: 'white', fontSize: '0.75rem', fontWeight: 'bold' },
+    pill: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        padding: '0.4rem 0.8rem',
+        borderRadius: '50px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px'
+    },
+    avatar: {
+        width: '32px',
+        height: '32px',
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #6e8efb 0%, #a777e3 100%)',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold',
+        fontSize: '0.8rem'
+    },
+    contactInfo: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.2rem'
+    },
+    contactItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        fontSize: '0.8rem',
+        color: '#666'
+    },
+    docLink: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        color: '#3392fd',
+        fontWeight: '700',
+        fontSize: '0.85rem',
+        textDecoration: 'none',
+        '&:hover': { textDecoration: 'underline' }
+    },
+    filterGroup: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        background: '#f8f9fa',
+        padding: '0.4rem 1rem',
+        borderRadius: '10px',
+        border: '1px solid #eee'
+    },
+    ghostSelect: {
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        color: '#444'
+    },
+    premiumBtn: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+        padding: '0.6rem 1.2rem',
+        background: '#1a1a1a',
+        color: 'white',
+        border: 'none',
+        borderRadius: '10px',
+        fontSize: '0.85rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.3s',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 15px rgba(0,0,0,0.2)' }
+    },
+    iconBtn: {
+        width: '32px',
+        height: '32px',
+        borderRadius: '8px',
+        border: '1px solid #eee',
+        background: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        color: '#666',
+        transition: 'all 0.2s',
+        '&:hover': { background: '#f8f9fa', color: '#1a1a1a' }
+    },
+    idBadge: {
+        background: '#f1f3f5',
+        color: '#495057',
+        padding: '0.2rem 0.5rem',
+        borderRadius: '6px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        fontFamily: 'monospace'
+    },
+    thead: {
+        background: '#fdfdfd'
+    },
+    th: {
+        padding: '1.2rem 1rem',
+        textAlign: 'left',
+        fontSize: '0.85rem',
+        fontWeight: '700',
+        color: '#888',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        borderBottom: '2px solid #f1f3f5'
+    },
+    tr: {
+        transition: 'background 0.2s',
+        '&:hover': { background: '#fafafa' }
+    },
+    td: {
+        padding: '1.2rem 1rem',
+        borderBottom: '1px solid #f1f3f5',
+        verticalAlign: 'middle'
+    },
     select: { padding: '0.5rem', borderRadius: '8px', border: '1px solid #ddd', cursor: 'pointer', fontSize: '0.9rem' },
     form: { display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', background: '#f8f9fa', padding: '1.5rem', borderRadius: '12px' },
     formGroup: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },

@@ -104,4 +104,65 @@ const cancelOrder = async (req, res) => {
     res.json(updatedOrder);
 };
 
-module.exports = { addOrderItems, getMyOrders, getOrders, updateOrderStatus, getRestaurantOrders, cancelOrder };
+// @desc    Update order to paid
+// @route   PUT /api/orders/:id/pay
+// @access  Private
+const updateOrderToPaid = async (req, res) => {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+        order.isPaid = true;
+        order.paidAt = Date.now();
+        order.status = 'Processing';
+        order.paymentResult = {
+            id: req.body.id || 'MOCK_PYMT_' + Math.random().toString(36).substring(7),
+            status: req.body.status || 'captured',
+            update_time: req.body.update_time || new Date().toISOString(),
+            email_address: req.body.email_address || req.user.email,
+        };
+
+        const updatedOrder = await order.save();
+
+        res.json(updatedOrder);
+    } else {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+};
+
+// @desc    Update order to failed
+// @route   PUT /api/orders/:id/fail
+// @access  Private
+const updateOrderToFailed = async (req, res) => {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+        order.status = 'Failed';
+        const updatedOrder = await order.save();
+        res.json(updatedOrder);
+    } else {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+};
+
+// @desc    Update order to COD
+// @route   PUT /api/orders/:id/cod
+// @access  Private
+const updateOrderToCOD = async (req, res) => {
+    const order = await Order.findById(req.params.id);
+
+    if (order) {
+        order.paymentMethod = 'Cash on Delivery';
+        order.status = 'Processing';
+        order.isPaid = false; // COD is not paid until delivery
+        
+        const updatedOrder = await order.save();
+        res.json(updatedOrder);
+    } else {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+};
+
+module.exports = { addOrderItems, getMyOrders, getOrders, updateOrderStatus, getRestaurantOrders, cancelOrder, updateOrderToPaid, updateOrderToFailed, updateOrderToCOD };
