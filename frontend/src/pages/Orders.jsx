@@ -3,6 +3,7 @@ import axios from 'axios';
 import AuthContext from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaStore, FaMoneyBillWave, FaCheckCircle, FaClock } from 'react-icons/fa';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
@@ -98,8 +99,8 @@ const Orders = () => {
                             >
                                 <div style={styles.header}>
                                     <div>
-                                        <span style={styles.label}>Order ID</span>
-                                        <div style={styles.orderId}>#{order._id.substring(order._id.length - 6).toUpperCase()}</div>
+                                        <div style={styles.hotelName}><FaStore style={{marginRight: '0.4rem', color: '#ff6b6b'}}/>{order.restaurantId?.name || 'Restaurant'}</div>
+                                        <div style={styles.orderId}>Order #{order._id.substring(order._id.length - 6).toUpperCase()}</div>
                                     </div>
                                     <span style={{ ...styles.status, backgroundColor: getStatusColor(order.status) }}>
                                         {order.status}
@@ -167,6 +168,30 @@ const Orders = () => {
                                     {expandedOrder.shippingAddress.postalCode}, {expandedOrder.shippingAddress.country} <br />
                                     <strong>Phone:</strong> {expandedOrder.shippingAddress.phone}
                                 </p>
+                            </div>
+
+                            <div style={styles.paymentSection}>
+                                <h4 style={styles.subHeading}>Payment Details</h4>
+                                <div style={styles.paymentInfo}>
+                                    <div style={styles.paymentRow}>
+                                        <span style={styles.paymentLabel}><FaMoneyBillWave color="#3392fd" style={{ marginRight: '0.4rem' }} /> Method:</span>
+                                        <span style={styles.paymentValue}>{expandedOrder.paymentMethod || 'Online'}</span>
+                                    </div>
+                                    <div style={styles.paymentRow}>
+                                        <span style={styles.paymentLabel}>
+                                            {expandedOrder.isPaid ? <FaCheckCircle color="#28a745" style={{ marginRight: '0.4rem' }} /> : <FaClock color="#ffc107" style={{ marginRight: '0.4rem' }} />} Status:
+                                        </span>
+                                        <span style={{...styles.paymentValue, color: expandedOrder.isPaid ? '#28a745' : '#ffc107', fontWeight: 'bold'}}>
+                                            {expandedOrder.isPaid ? 'Paid' : 'Pending'}
+                                        </span>
+                                    </div>
+                                    {expandedOrder.isPaid && expandedOrder.paidAt && (
+                                        <div style={styles.paymentRow}>
+                                            <span style={styles.paymentLabel}>Paid On:</span>
+                                            <span style={styles.paymentValue}>{new Date(expandedOrder.paidAt).toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     </div>
@@ -236,10 +261,18 @@ const styles = {
         marginBottom: '0.2rem',
         display: 'block',
     },
-    orderId: {
-        fontWeight: 'bold',
+    hotelName: {
+        fontSize: '1.1rem',
+        fontWeight: '700',
         color: '#333',
-        fontSize: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '0.2rem'
+    },
+    orderId: {
+        fontSize: '0.85rem',
+        color: '#666',
+        fontWeight: '500'
     },
     status: {
         padding: '0.4rem 0.8rem',
@@ -385,6 +418,34 @@ const styles = {
         color: '#555',
         fontSize: '0.9rem',
         lineHeight: '1.5',
+    },
+    paymentSection: {
+        background: '#f8f9fa',
+        padding: '1rem',
+        borderRadius: '8px',
+        borderLeft: '3px solid #3392fd',
+        marginTop: '1rem'
+    },
+    paymentInfo: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem'
+    },
+    paymentRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    paymentLabel: {
+        fontSize: '0.9rem',
+        color: '#666',
+        display: 'flex',
+        alignItems: 'center'
+    },
+    paymentValue: {
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        color: '#333'
     }
 };
 

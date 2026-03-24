@@ -33,7 +33,9 @@ const addOrderItems = async (req, res) => {
 // @route   GET /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user._id })
+        .populate('restaurantId', 'name')
+        .sort({ createdAt: -1 });
     res.json(orders);
 };
 
