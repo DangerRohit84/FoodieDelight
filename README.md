@@ -2,6 +2,10 @@
 
 FoodieDelight is a comprehensive, modern web application built with the MERN stack (MongoDB, Express.js, React, Node.js). It provides a complete ecosystem for food ordering, supporting three distinct user roles: **Admins**, **Restaurant Partners**, and standard **Customers**.
 
+## Project Live Link
+
+https://foodie-delight-chi.vercel.app
+
 ## 🌟 Key Features
 
 ### User Features (Customers)
