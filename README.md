@@ -4,7 +4,7 @@ FoodieDelight is a comprehensive, modern web application built with the MERN sta
 
 ## Project Live Link
 
-https://foodie-delight-chi.vercel.app
+Click 👉 https://foodie-delight-chi.vercel.app
 
 ## 🌟 Key Features
 
