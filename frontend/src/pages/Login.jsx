@@ -17,7 +17,7 @@ const Login = () => {
         const res = await login(email, password);
         if (res.success) {
             toast.success('Welcome back!');
-            navigate('/');
+            navigate('/menu');
         } else {
             toast.error(res.message);
         }
