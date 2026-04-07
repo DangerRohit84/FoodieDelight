@@ -47,7 +47,7 @@ const Register = () => {
         
         if (res.success) {
             toast.success('Account created! Welcome!');
-            navigate('/');
+            navigate('/menu');
         } else {
             toast.error(res.message);
         }
