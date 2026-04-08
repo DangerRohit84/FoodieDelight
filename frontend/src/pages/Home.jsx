@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaChevronRight, FaStar, FaClock, FaTruck, FaUtensils, FaMobileAlt, FaBoxOpen, FaQuoteLeft } from 'react-icons/fa';
 import heroImage from '../assets/hero_food.png';
+import FoodMemoryGame from '../components/FoodMemoryGame';
 
 const Home = () => {
     const fadeIn = {
@@ -134,6 +135,15 @@ const Home = () => {
                             <h5>{cat}</h5>
                         </motion.div>
                     ))}
+                </div>
+            </section>
+
+            {/* Game Section */}
+            <section style={{...styles.section, background: '#fafafa'}}>
+                <motion.h2 style={styles.sectionTitle} {...fadeIn}>Take a <span style={{ color: '#ff6b6b' }}>Fun Break</span></motion.h2>
+                <div style={styles.gameContainer}>
+                    <p style={styles.gameSubtitle}>Match the food items to win! How fast can you do it?</p>
+                    <FoodMemoryGame />
                 </div>
             </section>
 
@@ -425,6 +435,18 @@ const styles = {
         paddingTop: '1.5rem',
         display: 'flex',
         flexDirection: 'column',
+    },
+    gameContainer: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0 20px',
+    },
+    gameSubtitle: {
+        fontSize: '1.1rem',
+        color: '#555',
+        marginBottom: '2rem',
     },
     partnerCTA: {
         background: '#1a1a1a',
